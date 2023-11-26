@@ -1,3 +1,6 @@
+### This file contains functions for converting the data from
+# one format to another
+
 from util import convert_json_document_matrix
 from pathlib import Path
 import pickle

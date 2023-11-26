@@ -1,3 +1,6 @@
+### This file contains functions for visualizing data
+
+
 import matplotlib.pyplot as plt
 import numpy
 

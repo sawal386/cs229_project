@@ -1,3 +1,5 @@
+### This file contains functions for analyzing the data
+
 import numpy as np
 from sklearn.mixture import BayesianGaussianMixture as BGM
 import matplotlib.pyplot as plt

@@ -1,3 +1,5 @@
+### This file contains the the inference algorithms
+
 import numpy as np
 from visualization import simple_plot
 

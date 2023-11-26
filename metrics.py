@@ -1,3 +1,5 @@
+#this file contains functions that computes metrics used in model evaluation
+
 import numpy as np
 
 def matrix_accuracy(pred_mat, true_mat):
@@ -11,4 +13,24 @@ def matrix_accuracy(pred_mat, true_mat):
     diff_mat = pred_mat - true_mat
 
     return np.linalg.norm(diff_mat)
+
+## TODO
+def evaluate_topic_coherence():
+    """
+
+    """
+    ##code for evaluating topic coherence.
+    ##
+    pass
+
+
+## TODO
+def compute_perplexity():
+    """
+    computes the model perplexity
+    """
+
+
+
+
 

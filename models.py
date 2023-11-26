@@ -1,3 +1,6 @@
+## This file contains models used in the project
+
+
 import numpy as np
 from algorithms import *
 from sklearn.decomposition import non_negative_factorization, \
