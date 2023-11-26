@@ -18,8 +18,8 @@ class MatrixFactorization:
              d : (int) dimension of the data
              k : (int) the hidden dimension
         """
-        self.W = np.random.randint(5, size=(n, k))
-        self.H = np.random.randint(5, size=(k, d))
+        self.W = np.abs(np.random.randn(n, k))
+        self.H = np.abs(np.random.randn(k, d))
         self.n = n
         self.d = d
         self.k = k
@@ -94,26 +94,6 @@ class MatrixFactorization:
                 self.n, self.d ))
         pass
 
-'''
-class PoissonMatrixFactorization(MatrixFactorization):
-    """
-    Base Class for Poisson Matrix Factorization
-    """
-
-    def __init__(self, n, d, k):
-        super().__init__(n,d ,k)
-
-    def fit(self, X, method="EM", n_iters=10, thresh=1e-3):
-
-        if method == "EM":
-            print("Setting EM as the inference method")
-            self.inference_method = EMPMF(self)
-
-        i = 0
-        while i < n_iters:
-            self.inference_method.E_step(X)
-'''
-
 class NmfSk(MatrixFactorization):
     """
     Base class for non-negative matrix factorization using sk-learn
@@ -164,10 +144,17 @@ class LDA:
         return top_indices
 
 
+class PoissonMatrixFactorization(MatrixFactorization):
+    """
+    Base Class for Poisson Matrix Factorization
+    """
 
+    def __init__(self, n, d, k):
+        super().__init__(n,d ,k)
 
+    def fit(self, X, method="EM", n_iters=10, thresh=1e-3):
 
-
-
-
-
+        if method == "EM":
+            print("Setting EM as the inference method")
+            em = EMPMF(self)
+            em.run_EM(X)

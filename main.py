@@ -55,15 +55,17 @@ def analyze_model(model, index_word_map, folder_loc, name, col_key):
 if __name__ == "__main__":
 
     # full path name document-term matrix stores as pkl file
-    data_mat_file_name = "sample_data/train_mat.pkl"
+    data_mat_file_name = "sample_data/US_words_train_mat.pkl"
     # full path name dictionary that maps word to indices
-    index_word_file_name = "sample_data/dictionary.pkl"
-    
+    index_word_file_name = "sample_data/US_words_dictionary.pkl"
     with open(data_mat_file_name, "rb") as f:
         data = pkl.load(f)
     with open(index_word_file_name, "rb") as f:
         word_index_dict = pkl.load(f)
+    print(word_index_dict)
+    print("data:", data.shape)
     index_word_dict = {word_index_dict[w]: w for w in word_index_dict}
+
 
     nmf = run_nmf(data)
     embed_nmf = nmf.get_word_embedding()
@@ -72,10 +74,10 @@ if __name__ == "__main__":
      #                    title="NMF embedding")
     clusters = clusterize_embeddings(embed_nmf.T, index_word_dict)
     export_dict_csv(clusters, "nmf_embed_clusters", "Cluster")
-    analyze_model(nmf, index_word_dict, "analysis", "nmf_top_words", "Topic")
+    analyze_model(nmf, index_word_dict, "analysis", "nmf_top_words_eng", "Topic")
 
     lda = run_LDA(data)
-    analyze_model(lda, index_word_dict, "analysis", "lda_top_words", "Topic")
+    analyze_model(lda, index_word_dict, "analysis", "lda_top_words_eng", "Topic")
 
 
 
