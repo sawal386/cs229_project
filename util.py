@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 import pandas as pd
 import numpy as np
+import pickle as pkl
+import os
 
 def export_json(dict_, output_name, output_folder="analysis"):
     """
@@ -67,6 +69,7 @@ def convert_json_document_matrix(file_loc):
     Args:
         file_loc: (str) location of the json file
     """
+
     try:
         with open(file_loc, "r") as f:
             raw_data = json.load(f)
@@ -77,8 +80,92 @@ def convert_json_document_matrix(file_loc):
 
     return matrix
 
+def create_gensim_corpus(data, rev_dict):
+    """
+    Returns: (List[List])
+    """
+    corpus = []
+    print("Creating Corpus. This may take a while.")
+    for i in range(data.shape[0]):
+        doc = []
+        for j in range(data.shape[1]):
+            doc = doc + [rev_dict[j]] * int(data[i][j])
+        corpus.append(doc)
+
+    return corpus
 
 
+def create_folder_name(base_name, is_chinese, is_policy):
+    """
+    create a name for a give folder
+    Args:
+        base_name: (str) the base name
+        is_chinese: (bool) whether the data is Chinese text or not
+        is_policy: (bool) whether the data is policy doc text or not
+    Returns:
+        (str)
+    """
+    folder = base_name
+    if is_chinese:
+        folder = folder + "_chinese"
+    else:
+        folder = folder + "_english"
+
+    if is_policy:
+        folder = folder + "_policy"
+    else:
+        folder = folder + "_opinion"
+
+    return folder
 
 
+def save_pkl(path, name, data):
+    """
+    saves the data as a pkl file
+    Args:
+        path: (str) the path
+        name: (str) name of the output file
+        data: (object)
+    """
+    path = Path(path)
+    path.mkdir(parents=True, exist_ok=True)
+    if ".pkl" not in name:
+        name = name + ".pkl"
+    full_path = path / name
+    with open(full_path, "wb") as f:
+        pkl.dump(data, f)
 
+    print("Saved trained model to: {}".format(full_path))
+
+def load_pickle(full_path):
+    """
+    loads the pickle file
+    Args:
+        full_path: (str) the full path to the file
+
+    Returns:
+        (object)
+    """
+
+    with open(full_path, "rb") as f:
+        data = pkl.load(f)
+
+    return data
+
+def dict_representaion(file_loc):
+    """
+    stores the file names as dictionary
+    Args:
+        file_loc: (str)
+
+    Returns:
+        (dict) (str) -> (str), (dict) (str) -> (int)
+    """
+    topic_dict = {}
+    model_dict = {}
+    for file in os.listdir(file_loc):
+        name, n_topic = file[:-4].split("_")
+        topic_dict[name] = int(n_topic)
+        model_dict[name] = file_loc + "/" + file
+
+    return topic_dict, model_dict

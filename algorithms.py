@@ -2,6 +2,7 @@
 
 import numpy as np
 from visualization import simple_plot
+import torch
 
 class EMSolver:
     """Base class for Expectation Maximization
@@ -58,7 +59,6 @@ class EMSolver:
 
         pass
 
-
 class EMPMF(EMSolver):
     """
     EM Solver for Poisson Matrix Factorization
@@ -70,62 +70,65 @@ class EMPMF(EMSolver):
         """
         n = pmf_model.get_data_size()
         d = pmf_model.get_data_dim()
-        k = pmf_model.get_embedding_dim()
+        k = pmf_model.get_topic_dim()
 
         super().__init__(pmf_model, np.zeros((n, d, k)))
 
     def compute_elbo(self, X):
 
         W, H = self.model.W, self.model.H
-        ep = 0
-        WXH = np.einsum("ik,kj ->kij", W, H) + ep
-        WH = np.dot(W, H)
-        Y = (X / WH) * WXH * np.log(WXH) - WXH
+        ep = 1e-10
+        WXH = torch.einsum("ik,kj ->kij", W, H) + ep
+        WH = torch.matmul(W, H)
+        Y = (X / WH) * WXH * torch.log(WXH) - WXH
 
-        return np.sum(Y)
+        return torch.sum(Y)
 
     def E_step(self, X):
         """
         for PMF the latent variable follows multinomial distribution.
         """
         W, H = self.model.W, self.model.H
-        WH = np.dot(W, H)
-        WXH = np.einsum("ik,kj ->kij", W, H)
+        WH = torch.matmul(W, H)
+        WXH = torch.einsum("ik,kj ->kij", W, H)
 
         self.probability = WXH / WH
 
     def M_step(self, X):
+
         W, H = self.model.W, self.model.H
-        WH = np.dot(W, H)
-        WXH = np.einsum('ij,ik,kj->ik', X / WH, W, H)
-        H_sum = np.sum(H, axis=1)
-
+        WH = torch.matmul(W, H)
+        WXH = torch.einsum('ij,ik,kj->ik', X / WH, W, H)
+        H_sum = torch.sum(H, axis=1)
         W1 = WXH / H_sum
+        WH1 = torch.matmul(W1, H)
 
-        WH1 = np.dot(W1, H)
-        WXH1 = np.einsum('ij,ik,kj->kj', X / WH1, W1, H)
-        W_sum = np.sum(W1, axis=0).reshape(-1, 1)
+        WXH1 = torch.einsum('ij,ik,kj->kj', X / WH1, W1, H)
+        W_sum = torch.sum(W1, axis=0).reshape(-1, 1)
         H1 = WXH1 / W_sum
 
         self.model.W = W1
         self.model.H = H1
 
-    def run_EM(self, X, max_iters=100, epsilon=1e-3, save_elbo=True,
+    def run_EM(self, X, max_iters=1000, epsilon=1e-2, save_elbo=True,
                folder="figures", name="elbo_em"):
 
-        loss_1 = self.compute_elbo(X)
-        loss_0 = 0
+        loss_1 = 0
+        loss_0 = 100
         i = 0
-        self.elbo_all.append(loss_1)
+        X = X + 1e-10
+        max_iters = 50
         while np.abs(loss_0 - loss_1) > epsilon and i < max_iters :
             loss_0 = loss_1
             self.E_step(X)
             self.M_step(X)
-            loss_1 = self.compute_elbo(X)
+            loss_1 = self.compute_elbo(X).item()
             self.elbo_all.append(loss_1)
             print("iter: {}, ELBO: {}".format(i, loss_1))
             i += 1
+        #print(np.dot(self.model.W, self.model.H))
         x_dict = {"1": np.arange(0, len(self.elbo_all))}
-        y_dict = {"1": np.array(self.elbo_all)}
-        #simple_plot(x_dict, y_dict, "iter #", "ELBO",
-        #            save_name="elbo_pmf", legend_on=False)
+        y_dict = {"1": np.array(self.elbo_all) * -1}
+        simple_plot(x_dict, y_dict, "iter #", "ELBO",
+                    save_name="elbo_pmf_{}".format(self.model.get_topic_dim()),
+                    save_path="figures/elbo_pmf", legend_on=False, use_log=False)
